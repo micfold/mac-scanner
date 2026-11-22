@@ -41,8 +41,8 @@ fi
 gh auth setup-git -h github.com >/dev/null
 
 LOGIN="$(gh api user --jq .login)"
-if [ "$LOGIN" != "$OWNER" ]; then
-    die "Jste přihlášen jako '$LOGIN', ale repozitář má patřit '$OWNER'. Přihlaste se správným účtem: gh auth login"
+if [ "${LOGIN}" != "${OWNER}" ]; then
+    die "Jste přihlášen jako '${LOGIN}', ale repozitář má patřit '${OWNER}'. Přihlaste se správným účtem: gh auth login"
 fi
 
 # 3) Git repozitář a commit
@@ -52,7 +52,7 @@ if [ ! -d .git ]; then
 fi
 if [ -z "$(git config user.email || true)" ]; then
     ID="$(gh api user --jq .id)"
-    git config user.name "$LOGIN"
+    git config user.name "${LOGIN}"
     git config user.email "${ID}+${LOGIN}@users.noreply.github.com"
 fi
 git add -A
@@ -64,18 +64,18 @@ fi
 git branch -M main
 
 # 4) Repozitář na GitHubu
-if gh repo view "$OWNER/$REPO" >/dev/null 2>&1; then
-    say "Repozitář $OWNER/$REPO už existuje – jen nahraji změny."
+if gh repo view "${OWNER}/${REPO}" >/dev/null 2>&1; then
+    say "Repozitář ${OWNER}/${REPO} už existuje – jen nahraji změny."
 else
-    say "Zakládám veřejný repozitář $OWNER/$REPO…"
-    gh repo create "$OWNER/$REPO" --public --description "$DESCRIPTION" --disable-wiki
+    say "Zakládám veřejný repozitář ${OWNER}/${REPO}…"
+    gh repo create "${OWNER}/${REPO}" --public --description "${DESCRIPTION}" --disable-wiki
 fi
 
-URL="https://github.com/$OWNER/$REPO.git"
+URL="https://github.com/${OWNER}/${REPO}.git"
 if git remote get-url origin >/dev/null 2>&1; then
-    git remote set-url origin "$URL"
+    git remote set-url origin "${URL}"
 else
-    git remote add origin "$URL"
+    git remote add origin "${URL}"
 fi
 
 say "Nahrávám kód…"
@@ -84,12 +84,12 @@ git push -u origin main
 # 5) Štítky (topics), ať projekt lidé najdou
 say "Nastavuji štítky…"
 args=()
-for t in $TOPICS; do args+=(--add-topic "$t"); done
-gh repo edit "$OWNER/$REPO" "${args[@]}" >/dev/null || true
+for t in ${TOPICS}; do args+=(--add-topic "$t"); done
+gh repo edit "${OWNER}/${REPO}" "${args[@]}" >/dev/null || true
 
 say "Hotovo!"
-echo "  Repozitář:            https://github.com/$OWNER/$REPO"
-echo "  Automatické sestavení: https://github.com/$OWNER/$REPO/actions"
+echo "  Repozitář:            https://github.com/${OWNER}/${REPO}"
+echo "  Automatické sestavení: https://github.com/${OWNER}/${REPO}/actions"
 echo ""
 echo "Za pár minut bude v Actions ke stažení hotová aplikace (Skener.zip)."
-gh repo view "$OWNER/$REPO" --web >/dev/null 2>&1 || true
+gh repo view "${OWNER}/${REPO}" --web >/dev/null 2>&1 || true
