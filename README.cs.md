@@ -23,8 +23,8 @@ i-SENSYS / imageCLASS, PIXMA a MAXIFY zhruba od roku 2017. Seznam modelů je v [
 Potřebujete macOS 14 nebo novější a Xcode, nebo jen Command Line Tools (`xcode-select --install`).
 
 ```bash
-git clone https://github.com/micfold/skener.git ~/Developer/skener
-cd ~/Developer/skener
+git clone https://github.com/micfold/mac-canon-scanner.git ~/Developer/mac-canon-scanner
+cd ~/Developer/mac-canon-scanner
 ./scripts/build-app.sh
 open build/Skener.app
 ```

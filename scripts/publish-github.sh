@@ -1,7 +1,7 @@
 #!/bin/bash
-# Založí veřejný repozitář github.com/<účet>/skener a nahraje do něj tento projekt.
+# Založí veřejný repozitář github.com/<účet>/mac-canon-scanner a nahraje do něj tento projekt.
 #
-#   ./scripts/publish-github.sh            # účet micfold, repozitář skener
+#   ./scripts/publish-github.sh            # účet micfold, repozitář mac-canon-scanner
 #   ./scripts/publish-github.sh jinyucet jinynazev
 #
 # Potřebuje GitHub CLI (brew install gh). Bezpečné spustit opakovaně:
@@ -9,7 +9,7 @@
 set -euo pipefail
 
 OWNER="${1:-micfold}"
-REPO="${2:-skener}"
+REPO="${2:-mac-canon-scanner}"
 DESCRIPTION="Batch document scanning for macOS over the network (eSCL/AirScan) – built for Canon i-SENSYS/imageCLASS & PIXMA, no Canon drivers needed"
 TOPICS="macos swiftui scanner escl airscan airprint canon document-scanning ocr pdf"
 
