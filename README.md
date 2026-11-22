@@ -68,8 +68,8 @@ printer's web interface (Remote UI) under *Settings/Registration → Network Set
 Requirements: **macOS 14 Sonoma or newer**, and Xcode or only the Command Line Tools (`xcode-select --install`).
 
 ```bash
-git clone https://github.com/micfold/skener.git ~/Developer/skener
-cd ~/Developer/skener
+git clone https://github.com/micfold/mac-canon-scanner.git ~/Developer/mac-canon-scanner
+cd ~/Developer/mac-canon-scanner
 ./scripts/build-app.sh
 open build/Skener.app
 ```
