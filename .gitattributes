@@ -1,0 +1,3 @@
+# Keep the GitHub language bar about the app, not its helper scripts.
+scripts/*.py linguist-detectable=false
+docs/** linguist-documentation

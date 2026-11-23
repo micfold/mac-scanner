@@ -1,0 +1,221 @@
+import PDFKit
+import PrinterKit
+import SwiftUI
+import UniformTypeIdentifiers
+
+struct PrintView: View {
+  @Bindable var model: PrintModel
+  @State private var isDropTargeted = false
+
+  var body: some View {
+    VStack(spacing: 0) {
+      if let banner = model.banner {
+        BannerView(banner: banner) { model.banner = nil }
+      }
+      HSplitView {
+        documentList
+          .frame(minWidth: 220, idealWidth: 250, maxWidth: 320)
+        preview
+          .frame(minWidth: 320, maxWidth: .infinity, maxHeight: .infinity)
+        PrintOptionsForm(model: model)
+          .frame(minWidth: 300, idealWidth: 330, maxWidth: 380)
+      }
+    }
+    .toolbar {
+      ToolbarItem(placement: .primaryAction) {
+        Button("Tisknout", systemImage: "printer") { model.print() }
+          .disabled(!model.canPrint)
+          .keyboardShortcut("p")
+      }
+    }
+  }
+
+  private var documentList: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      List(selection: $model.selectedID) {
+        Section("Soubory k tisku") {
+          ForEach(model.documents) { document in
+            HStack {
+              Image(systemName: "doc.richtext").foregroundStyle(.red)
+              VStack(alignment: .leading) {
+                Text(document.name).lineLimit(1)
+                Text(plural(document.pageCount, "strana", "strany", "stran")).font(.caption).foregroundStyle(.secondary)
+              }
+            }
+            .tag(document.id)
+            .contextMenu { Button("Odebrat", role: .destructive) { model.remove(document.id) } }
+          }
+        }
+      }
+      .listStyle(.sidebar)
+      DropZone(title: "Přetáhněte PDF nebo obrázky", systemImage: "arrow.down.doc", isTargeted: isDropTargeted)
+        .padding(12)
+        .onTapGesture { model.chooseFiles() }
+    }
+    .dropDestination(for: URL.self) { urls, _ in
+      model.add(urls)
+      return true
+    } isTargeted: {
+      isDropTargeted = $0
+    }
+  }
+
+  @ViewBuilder private var preview: some View {
+    if let pdf = model.previewPDF {
+      VStack(spacing: 0) {
+        PDFPreview(data: pdf)
+        HStack {
+          if let sheets = model.sheetsEstimate {
+            Label("≈ \(plural(sheets, "list", "listy", "listů")) papíru", systemImage: "doc.plaintext")
+          }
+          Spacer()
+          Text(model.routeDescription)
+        }
+        .font(.callout)
+        .foregroundStyle(.secondary)
+        .padding(10)
+        .background(.bar)
+      }
+    } else {
+      ContentUnavailableView {
+        Label("Nic k tisku", systemImage: "printer")
+      } description: {
+        Text("Přetáhněte sem PDF nebo obrázky, nebo je otevřete.")
+      } actions: {
+        Button("Otevřít soubory…") { model.chooseFiles() }.buttonStyle(.borderedProminent)
+      }
+      .dropDestination(for: URL.self) { urls, _ in
+        model.add(urls)
+        return true
+      }
+    }
+  }
+}
+
+struct PrintOptionsForm: View {
+  @Bindable var model: PrintModel
+  @State private var newPresetName = ""
+  @State private var namingPreset = false
+
+  var body: some View {
+    Form {
+      Section("Předvolba") {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: 8)], spacing: 8) {
+          ForEach(model.presets) { preset in
+            Button {
+              model.apply(preset)
+            } label: {
+              VStack(spacing: 4) {
+                Image(systemName: preset.symbol).font(.title3)
+                Text(preset.name).font(.caption).lineLimit(1)
+              }
+              .frame(maxWidth: .infinity, minHeight: 48)
+            }
+            .buttonStyle(.bordered)
+            .tint(model.isActive(preset) ? .accentColor : nil)
+          }
+        }
+        Button("Uložit nastavení jako předvolbu…") { namingPreset = true }
+          .buttonStyle(.link)
+      }
+
+      Section("Kopie a stránky") {
+        Stepper("Kopie: \(model.ticket.copies)", value: $model.ticket.copies, in: 1...model.maxCopies)
+        TextField("Stránky", text: $model.pageRangeText, prompt: Text("Všechny, např. 1-3, 5"))
+          .foregroundStyle(model.pageRangeIsValid ? Color.primary : Color.red)
+        Picker("Stránek na list", selection: $model.ticket.numberUp) {
+          ForEach(model.numberUpOptions, id: \.self) { Text("\($0)").tag($0) }
+        }
+      }
+
+      Section("Papír") {
+        Picker("Formát", selection: $model.ticket.media) {
+          Text("Výchozí").tag(String?.none)
+          ForEach(model.mediaOptions, id: \.self) { Text(MediaText.name($0)).tag(String?.some($0)) }
+        }
+        if !model.sourceOptions.isEmpty {
+          Picker("Zásobník", selection: $model.ticket.mediaSource) {
+            Text("Automaticky").tag(String?.none)
+            ForEach(model.sourceOptions, id: \.self) { Text(MediaText.source($0)).tag(String?.some($0)) }
+          }
+        }
+        Picker("Orientace", selection: $model.ticket.orientation) {
+          Text("Automaticky").tag(Orientation?.none)
+          ForEach(Orientation.allCases) { Text($0.label).tag(Orientation?.some($0)) }
+        }
+        Picker("Velikost", selection: $model.ticket.scaling) {
+          ForEach(model.scalingOptions) { Text($0.label).tag($0) }
+        }
+      }
+
+      Section("Tisk") {
+        Picker("Strany", selection: $model.ticket.sides) {
+          ForEach(model.sidesOptions) { Text($0.label).tag($0) }
+        }
+        Picker("Barva", selection: $model.ticket.colorMode) {
+          ForEach(model.colorOptions) { Text($0.label).tag($0) }
+        }
+        Picker("Kvalita", selection: $model.ticket.quality) {
+          ForEach(model.qualityOptions) { Text($0.label).tag($0) }
+        }
+      }
+
+      Section {
+        if let letterhead = model.letterhead {
+          LabeledContent("Podklad") {
+            HStack {
+              Text(letterhead.name).lineLimit(1)
+              Button("Odebrat", systemImage: "xmark.circle.fill") { model.removeLetterhead() }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+            }
+          }
+        } else {
+          Button("Vybrat hlavičkový papír (PDF)…") { model.chooseLetterhead() }
+        }
+      } header: {
+        Text("Hlavičkový papír")
+      } footer: {
+        Text("Každá stránka se vytiskne přes první stranu zvoleného PDF – logo, adresa, patička.")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+
+      Section {
+        Button(model.documents.count > 1 ? "Tisknout vybraný" : "Tisknout") { model.print() }
+          .buttonStyle(.borderedProminent)
+          .disabled(!model.canPrint)
+        if model.documents.count > 1 {
+          Button("Tisknout všechny (\(model.documents.count))") { model.print(all: true) }
+            .disabled(!model.canPrint)
+        }
+      }
+    }
+    .formStyle(.grouped)
+    .disabled(model.isPrinting)
+    .alert("Nová předvolba", isPresented: $namingPreset) {
+      TextField("Název", text: $newPresetName)
+      Button("Uložit") { if !newPresetName.isEmpty { model.saveAsPreset(named: newPresetName) } }
+      Button("Zrušit", role: .cancel) {}
+    }
+  }
+}
+
+/// PDFKit preview of the document as it will print.
+struct PDFPreview: NSViewRepresentable {
+  var data: Data
+
+  func makeNSView(context: Context) -> PDFView {
+    let view = PDFView()
+    view.autoScales = true
+    view.displayMode = .singlePageContinuous
+    view.displaysPageBreaks = true
+    view.backgroundColor = .underPageBackgroundColor
+    return view
+  }
+
+  func updateNSView(_ view: PDFView, context: Context) {
+    guard view.document?.dataRepresentation() != data else { return }
+    view.document = PDFDocument(data: data)
+  }
+}
