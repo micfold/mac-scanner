@@ -1,27 +1,41 @@
-// swift-tools-version:5.9
+// swift-tools-version: 6.0
 import PackageDescription
 
-// ScanCore   – komunikace se skenerem (eSCL/AirScan), dělení dávky, pojmenování. Jen Foundation.
-// skener-cli – terminálový nástroj pro test spojení a skenování bez aplikace.
-// Skener     – aplikace pro macOS (SwiftUI, Vision OCR, PDF).
+// Module map
+//
+//   PrinterKit   Printer & scanner protocols (IPP, eSCL), batch splitting, naming.
+//                Foundation only — builds and is tested on macOS and Linux.
+//   AppFeature   The macOS app: feature models (@Observable) + SwiftUI views,
+//                talking to the device through protocol-based services.
+//   Skener       App entry point (composition root).
+//   skener-cli   Command-line tool for testing a printer/scanner.
+//   snapshots    Renders the app's screens with sample data to PNG (used by CI).
+
+var products: [Product] = [
+  .library(name: "PrinterKit", targets: ["PrinterKit"]),
+  .executable(name: "skener-cli", targets: ["skener-cli"]),
+]
 
 var targets: [Target] = [
-    .target(name: "ScanCore"),
-    .executableTarget(name: "skener-cli", dependencies: ["ScanCore"]),
-    .testTarget(name: "ScanCoreTests", dependencies: ["ScanCore"]),
-]
-var products: [Product] = [
-    .executable(name: "skener-cli", targets: ["skener-cli"]),
+  .target(name: "PrinterKit"),
+  .executableTarget(name: "skener-cli", dependencies: ["PrinterKit"]),
+  .testTarget(name: "PrinterKitTests", dependencies: ["PrinterKit"]),
 ]
 
 #if os(macOS)
-targets.append(.executableTarget(name: "Skener", dependencies: ["ScanCore"]))
-products.append(.executable(name: "Skener", targets: ["Skener"]))
+  products += [.executable(name: "Skener", targets: ["Skener"])]
+  targets += [
+    .target(name: "AppFeature", dependencies: ["PrinterKit"]),
+    .executableTarget(name: "Skener", dependencies: ["AppFeature"]),
+    .executableTarget(name: "snapshots", dependencies: ["AppFeature"]),
+    .testTarget(name: "AppFeatureTests", dependencies: ["AppFeature"]),
+  ]
 #endif
 
 let package = Package(
-    name: "Skener",
-    platforms: [.macOS(.v14)],
-    products: products,
-    targets: targets
+  name: "Skener",
+  platforms: [.macOS(.v14)],
+  products: products,
+  targets: targets,
+  swiftLanguageModes: [.v6]
 )

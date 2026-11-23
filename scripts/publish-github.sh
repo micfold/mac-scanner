@@ -1,7 +1,7 @@
 #!/bin/bash
-# Založí veřejný repozitář github.com/<účet>/mac-canon-scanner a nahraje do něj tento projekt.
+# Založí veřejný repozitář github.com/<účet>/mac-scanner a nahraje do něj tento projekt.
 #
-#   ./scripts/publish-github.sh            # účet micfold, repozitář mac-canon-scanner
+#   ./scripts/publish-github.sh            # účet micfold, repozitář mac-scanner
 #   ./scripts/publish-github.sh jinyucet jinynazev
 #
 # Potřebuje GitHub CLI (brew install gh). Bezpečné spustit opakovaně:
@@ -9,7 +9,7 @@
 set -euo pipefail
 
 OWNER="${1:-micfold}"
-REPO="${2:-mac-canon-scanner}"
+REPO="${2:-mac-scanner}"
 DESCRIPTION="Batch document scanning for macOS over the network (eSCL/AirScan) – built for Canon i-SENSYS/imageCLASS & PIXMA, no Canon drivers needed"
 TOPICS="macos swiftui scanner escl airscan airprint canon document-scanning ocr pdf"
 
@@ -18,7 +18,7 @@ if [ ! -f Package.swift ]; then cd "$(dirname "$0")/.."; fi
 say() { printf '\n\033[1m▸ %s\033[0m\n' "$*"; }
 die() { printf '\n\033[31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
 
-[ -f Package.swift ] && [ -d Sources/Skener ] || die "Spusťte skript ze složky projektu Skener."
+if [ ! -f Package.swift ] || [ ! -d Sources/Skener ]; then die "Spusťte skript ze složky projektu Skener."; fi
 
 # 1) GitHub CLI
 if ! command -v gh >/dev/null 2>&1; then

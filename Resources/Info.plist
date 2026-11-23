@@ -17,7 +17,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.2</string>
+	<string>0.4.0</string>
 	<key>CFBundleVersion</key>
 	<string>2</string>
 	<key>LSMinimumSystemVersion</key>
@@ -29,9 +29,10 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Skener se připojuje k tiskárně ve vaší síti, aby mohl skenovat.</string>
+	<string>Skener se připojuje k tiskárně ve vaší síti, aby mohl tisknout a skenovat.</string>
 	<key>NSBonjourServices</key>
 	<array>
+		<string>_ipp._tcp</string>
 		<string>_uscan._tcp</string>
 	</array>
 	<key>NSAppTransportSecurity</key>
