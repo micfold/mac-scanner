@@ -100,7 +100,7 @@ public final class PrintModel {
     if selectedID == id { selectedID = documents.first?.id }
   }
 
-  func chooseFiles() {
+  public func chooseFiles() {
     let panel = NSOpenPanel()
     panel.allowsMultipleSelection = true
     panel.allowedContentTypes = [.pdf, .image]

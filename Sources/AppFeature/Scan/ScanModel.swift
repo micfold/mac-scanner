@@ -82,7 +82,7 @@ public final class ScanModel {
   // MARK: Scanning
 
   /// Scans into the batch. With `intoLast`, the first new document is appended to the last one.
-  func scan(intoLast: Bool = false) {
+  public func scan(intoLast: Bool = false) {
     guard !isBusy else { return }
     guard session.address.isEmpty == false else {
       banner = Banner(kind: .error, text: "Nejdřív v Nastavení vyberte tiskárnu.")
@@ -119,7 +119,7 @@ public final class ScanModel {
     }
   }
 
-  func cancelScan() { scanTask?.cancel() }
+  public func cancelScan() { scanTask?.cancel() }
 
   private func add(_ page: ScannedPage) {
     var page = page
