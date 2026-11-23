@@ -75,10 +75,14 @@ public final class DeviceSession {
 
     let services = self.services
     let knownCaps = scannerCapabilities
-    async let printerInfo = Result { try await services.printer.info() }
-    async let scannerStatus = Result { try await services.scanner.status() }
-    async let scannerCaps = knownCaps == nil ? try? await services.scanner.capabilities() : knownCaps
-    let (info, status, caps) = await (printerInfo, scannerStatus, scannerCaps)
+    // Separate tasks rather than `async let`: the latter trips a Swift runtime
+    // allocator bug ("freed pointer was not the last allocation") in optimised builds.
+    let infoTask = Task { await capture { try await services.printer.info() } }
+    let statusTask = Task { await capture { try await services.scanner.status() } }
+    let capsTask = Task { knownCaps == nil ? try? await services.scanner.capabilities() : knownCaps }
+    let info = await infoTask.value
+    let status = await statusTask.value
+    let caps = await capsTask.value
     guard current == address else { return }  // the user switched devices meanwhile
 
     printer = try? info.get()
@@ -101,8 +105,7 @@ public final class DeviceSession {
   }
 }
 
-extension Result where Failure == any Error {
-  init(catching body: () async throws -> Success) async {
-    do { self = .success(try await body()) } catch { self = .failure(error) }
-  }
+/// Runs `body` and wraps its outcome, so several requests can fail independently.
+private func capture<T: Sendable>(_ body: @Sendable () async throws -> T) async -> Result<T, any Error> {
+  do { return .success(try await body()) } catch { return .failure(error) }
 }
