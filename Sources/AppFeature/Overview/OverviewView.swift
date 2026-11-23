@@ -107,9 +107,7 @@ struct OverviewView: View {
             if tray.level == 0 {
               Text("Prázdný").foregroundStyle(.orange)
             } else if let level = tray.level {
-              Gauge(value: Double(level), in: 0...100) { EmptyView() }
-                .gaugeStyle(.accessoryLinearCapacity)
-                .frame(width: 80)
+              LevelBar(fraction: Double(level) / 100, color: .secondary).frame(width: 80)
             } else {
               Text("Vloženo").foregroundStyle(.secondary)
             }

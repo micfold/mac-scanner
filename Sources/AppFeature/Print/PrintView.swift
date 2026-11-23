@@ -1,4 +1,3 @@
-import PDFKit
 import PrinterKit
 import SwiftUI
 import UniformTypeIdentifiers
@@ -47,7 +46,8 @@ struct PrintView: View {
           }
         }
       }
-      .listStyle(.sidebar)
+      .listStyle(.inset)
+      .scrollContentBackground(.hidden)
       DropZone(title: "Přetáhněte PDF nebo obrázky", systemImage: "arrow.down.doc", isTargeted: isDropTargeted)
         .padding(12)
         .onTapGesture { model.chooseFiles() }
@@ -63,7 +63,7 @@ struct PrintView: View {
   @ViewBuilder private var preview: some View {
     if let pdf = model.previewPDF {
       VStack(spacing: 0) {
-        PDFPreview(data: pdf)
+        PDFPagesView(data: pdf)
         HStack {
           if let sheets = model.sheetsEstimate {
             Label("≈ \(plural(sheets, "list", "listy", "listů")) papíru", systemImage: "doc.plaintext")
@@ -102,6 +102,7 @@ struct PrintOptionsForm: View {
       Section("Předvolba") {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: 8)], spacing: 8) {
           ForEach(model.presets) { preset in
+            let active = model.isActive(preset)
             Button {
               model.apply(preset)
             } label: {
@@ -109,10 +110,15 @@ struct PrintOptionsForm: View {
                 Image(systemName: preset.symbol).font(.title3)
                 Text(preset.name).font(.caption).lineLimit(1)
               }
-              .frame(maxWidth: .infinity, minHeight: 48)
+              .frame(maxWidth: .infinity, minHeight: 52)
+              .foregroundStyle(active ? Color.accentColor : .primary)
+              .background(
+                active ? Color.accentColor.opacity(0.16) : Color.secondary.opacity(0.08), in: .rect(cornerRadius: 8)
+              )
+              .overlay(
+                RoundedRectangle(cornerRadius: 8).strokeBorder(active ? Color.accentColor : .clear, lineWidth: 1.5))
             }
-            .buttonStyle(.bordered)
-            .tint(model.isActive(preset) ? .accentColor : nil)
+            .buttonStyle(.plain)
           }
         }
         Button("Uložit nastavení jako předvolbu…") { namingPreset = true }
@@ -201,21 +207,30 @@ struct PrintOptionsForm: View {
   }
 }
 
-/// PDFKit preview of the document as it will print.
-struct PDFPreview: NSViewRepresentable {
+/// Renders the PDF exactly as it will print, page by page.
+struct PDFPagesView: View {
   var data: Data
+  @State private var pages: [Thumbnail] = []
 
-  func makeNSView(context: Context) -> PDFView {
-    let view = PDFView()
-    view.autoScales = true
-    view.displayMode = .singlePageContinuous
-    view.displaysPageBreaks = true
-    view.backgroundColor = .underPageBackgroundColor
-    return view
-  }
-
-  func updateNSView(_ view: PDFView, context: Context) {
-    guard view.document?.dataRepresentation() != data else { return }
-    view.document = PDFDocument(data: data)
+  var body: some View {
+    ScrollView {
+      LazyVStack(spacing: 18) {
+        ForEach(pages.indices, id: \.self) { index in
+          Image(decorative: pages[index].image, scale: 2)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(maxWidth: 520)
+            .background(.white)
+            .shadow(color: .black.opacity(0.25), radius: 4, y: 2)
+        }
+      }
+      .padding(24)
+      .frame(maxWidth: .infinity)
+    }
+    .background(Color(nsColor: .underPageBackgroundColor))
+    .task(id: data) {
+      let data = self.data
+      pages = await Task.detached(priority: .userInitiated) { PrintComposer.render(data, width: 1040) }.value
+    }
   }
 }

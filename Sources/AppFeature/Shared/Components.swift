@@ -50,6 +50,22 @@ extension PrinterState {
   }
 }
 
+/// A thin rounded level bar (drawn by hand so it keeps its colour in inactive windows).
+struct LevelBar: View {
+  var fraction: Double
+  var color: Color
+
+  var body: some View {
+    GeometryReader { geometry in
+      ZStack(alignment: .leading) {
+        Capsule().fill(.quaternary)
+        Capsule().fill(color).frame(width: geometry.size.width * min(max(fraction, 0), 1))
+      }
+    }
+    .frame(height: 7)
+  }
+}
+
 /// One consumable: coloured bar + percentage.
 struct SupplyGauge: View {
   var supply: Supply
@@ -57,8 +73,7 @@ struct SupplyGauge: View {
   var body: some View {
     HStack(spacing: 10) {
       Text(supply.localizedName).frame(width: 82, alignment: .leading)
-      ProgressView(value: Double(supply.level ?? 0), total: 100)
-        .tint(supply.swatch)
+      LevelBar(fraction: Double(supply.level ?? 0) / 100, color: supply.swatch)
         .opacity(supply.level == nil ? 0.3 : 1)
       Text(supply.level.map { "\($0) %" } ?? "?")
         .monospacedDigit()
@@ -74,6 +89,8 @@ extension Supply {
     guard let hex = color?.split(separator: "#").first.map(String.init), hex.count == 6,
       let value = Int(hex, radix: 16)
     else { return .gray }
+    // Black toner on a dark background: use the text colour so the bar stays visible.
+    if value & 0xFFFFFF <= 0x333333 { return .primary }
     return Color(
       red: Double((value >> 16) & 0xFF) / 255, green: Double((value >> 8) & 0xFF) / 255,
       blue: Double(value & 0xFF) / 255)

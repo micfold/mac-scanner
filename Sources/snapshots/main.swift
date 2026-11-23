@@ -28,7 +28,7 @@ await model.session.refresh()
   window.appearance = NSAppearance(named: appearance)
   window.contentView = host
   window.layoutIfNeeded()
-  try? await Task.sleep(for: .milliseconds(600))
+  try? await Task.sleep(for: .milliseconds(1200))
   host.layoutSubtreeIfNeeded()
   guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return nil }
   host.cacheDisplay(in: host.bounds, to: rep)

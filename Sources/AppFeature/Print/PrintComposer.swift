@@ -134,6 +134,28 @@ enum PrintComposer {
     return output as Data
   }
 
+  /// Rasterises every page (white background) for on-screen preview.
+  static func render(_ data: Data, width: Int) -> [Thumbnail] {
+    guard let document = pdfDocument(data), document.numberOfPages > 0 else { return [] }
+    return (1...document.numberOfPages).compactMap { number in
+      guard let page = document.page(at: number) else { return nil }
+      let box = page.getBoxRect(.mediaBox)
+      let scale = CGFloat(width) / box.width
+      let height = Int(box.height * scale)
+      guard
+        let context = CGContext(
+          data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+          space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
+      else { return nil }
+      context.setFillColor(CGColor(gray: 1, alpha: 1))
+      context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+      context.scaleBy(x: scale, y: scale)
+      context.translateBy(x: -box.minX, y: -box.minY)
+      context.drawPDFPage(page)
+      return context.makeImage().map(Thumbnail.init(image:))
+    }
+  }
+
   static func pdfDocument(_ data: Data) -> CGPDFDocument? {
     CGDataProvider(data: data as CFData).flatMap(CGPDFDocument.init)
   }
