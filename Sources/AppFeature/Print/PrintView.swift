@@ -50,6 +50,7 @@ struct PrintView: View {
         .padding(12)
         .onTapGesture { model.chooseFiles() }
     }
+    .background(.background)
     .dropDestination(for: URL.self) { urls, _ in
       model.add(urls)
       return true
