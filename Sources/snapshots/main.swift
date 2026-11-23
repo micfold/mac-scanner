@@ -26,6 +26,7 @@ await model.session.refresh()
     contentRect: CGRect(origin: .zero, size: size), styleMask: [.titled, .fullSizeContentView],
     backing: .buffered, defer: false)
   window.appearance = NSAppearance(named: appearance)
+  NSApp.appearance = NSAppearance(named: appearance)  // dynamic colours resolve against the app appearance
   window.contentView = host
   window.layoutIfNeeded()
   try? await Task.sleep(for: .milliseconds(1200))

@@ -89,11 +89,10 @@ extension Supply {
     guard let hex = color?.split(separator: "#").first.map(String.init), hex.count == 6,
       let value = Int(hex, radix: 16)
     else { return .gray }
+    let (red, green, blue) = ((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF)
     // Black toner on a dark background: use the text colour so the bar stays visible.
-    if value & 0xFFFFFF <= 0x333333 { return .primary }
-    return Color(
-      red: Double((value >> 16) & 0xFF) / 255, green: Double((value >> 8) & 0xFF) / 255,
-      blue: Double(value & 0xFF) / 255)
+    if max(red, green, blue) <= 0x33 { return .primary }
+    return Color(red: Double(red) / 255, green: Double(green) / 255, blue: Double(blue) / 255)
   }
 
   var localizedName: String {
