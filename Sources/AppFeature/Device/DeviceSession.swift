@@ -39,7 +39,8 @@ public final class DeviceSession {
     self.factory = factory
     self.preferences = preferences
     self.log = log
-    address = preferences.device ?? DeviceAddress(host: "")
+    let address = preferences.device ?? DeviceAddress(host: "")
+    self.address = address
     cupsQueue = preferences.cupsQueue
     services = factory.make(address, preferences.cupsQueue, log.sink)
   }

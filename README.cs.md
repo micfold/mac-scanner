@@ -1,53 +1,48 @@
 # Skener (česky)
 
-Dávkové skenování pro Mac přes síť, bez ovladačů a aplikací od Canonu. Se skenerem komunikuje
-standardem **eSCL / AirScan** (skenování přes AirPrint), který umí většina síťových tiskáren Canon
-i-SENSYS / imageCLASS, PIXMA a MAXIFY zhruba od roku 2017. Seznam modelů je v [anglickém README](README.md#supported-printers).
+Skenování, tisk a přehled o síťové tiskárně z Macu, bez ovladačů a aplikací výrobce. Postaveno pro Canon
+i-SENSYS / imageCLASS, PIXMA a MAXIFY. Funguje s každou tiskárnou, která umí **IPP** (AirPrint) a **eSCL** (AirScan).
+Seznam modelů je v [anglickém README](README.md#supported-printers).
+
+<p align="center"><img src="docs/demo.gif" alt="Skener" width="900"></p>
 
 ## Co umí
 
-- **Předvolby** Faktury / Smlouvy / Účtenky / Fotky. Ukládají se a dají se přejmenovat a duplikovat.
-- **Podavač i sklo**, oboustranné skenování, barevně i v odstínech šedi, A4 / A5 / Letter / Legal
-- **Živé náhledy** stránek během skenování
-- **Dělení dávky** podle prázdného listu, po N stranách, po jedné straně, nebo vše do jednoho PDF.
-  Při oboustranném skenu rozdělí dokument jen list prázdný z *obou* stran. Prázdné ruby se jen zahodí.
-- **Vyřazené prázdné strany** zůstávají vidět a jdou jedním klikem vrátit. Citlivost je nastavitelná.
-- **Ruční úpravy**: přejmenování, sloučení, rozdělení, otočení a smazání (pravým tlačítkem na náhledu)
-- **„Přiskenovat do posledního“**, když se vše nevejde do podavače, nebo při skenování více stran ze skla
-- **PDF s prohledávatelným textem** (OCR přes systémové rozpoznávání textu)
-- **Pojmenování** `Faktura_{datum}_{č}`. Čísla navazují na soubory, které už ve složce jsou.
-- **Protokol komunikace** (⌘L, ukládá se také do `~/Library/Logs/Skener.log`)
+- **Přehled**: stav tiskárny, upozornění (papír, zaseknutí, toner), hladiny tonerů, papír v zásobnících a rychlé akce
+- **Dávkové skenování**
+  - předvolby, podavač i sklo, oboustranně
+  - dělení dávky podle prázdného listu nebo po N stranách
+  - vyřazení prázdných stran, které jdou vrátit
+  - ruční úpravy dokumentů a stránek
+  - PDF s prohledávatelným textem
+- **Tisk**
+  - náhled toho, co se vytiskne
+  - předvolby: Standardní, Úsporně, Oboustranně, Fotky, Obálka DL a vlastní
+  - kopie, rozsah stránek, N stran na list, formát, **zásobník**, orientace, měřítko, oboustranně, barva, kvalita
+  - **hlavičkový papír** (podklad z PDF)
+- **Fronta úloh** s rušením, **Najít tiskárnu** (pípne a blikne) a **webové nastavení tiskárny** přímo v aplikaci
+- **Ikona v liště** se stavem a tonery, **protokol komunikace** (⌘L)
 
 ## Instalace
 
-Potřebujete macOS 14 nebo novější a Xcode, nebo jen Command Line Tools (`xcode-select --install`).
+Hotovou aplikaci stáhněte z [Releases](https://github.com/micfold/mac-scanner/releases). Poprvé ji otevřete pravým
+tlačítkem → **Otevřít**.
+
+Nebo ji sestavte sami (Xcode nebo Command Line Tools):
 
 ```bash
-git clone https://github.com/micfold/mac-canon-scanner.git ~/Developer/mac-canon-scanner
-cd ~/Developer/mac-canon-scanner
-./scripts/build-app.sh
-open build/Skener.app
+git clone https://github.com/micfold/mac-scanner.git ~/Developer/mac-scanner
+cd ~/Developer/mac-scanner
+make app && open build/Skener.app
 ```
 
-Při prvním spuštění povolte **přístup k místní síti**
-(Nastavení systému → Soukromí a zabezpečení → Místní síť → Skener).
-
-## Test spojení z Terminálu
-
-```bash
-swift run skener-cli caps 192.168.1.50
-swift run skener-cli status 192.168.1.50
-swift run skener-cli scan 192.168.1.50 --out ~/Desktop/test-sken -v
-```
-
-`scan` bere z podavače oboustranně. `--sklo`, `--jednostranne`, `--seda` a `--dpi 150` to změní.
-Přepínač `-v` vypíše celou komunikaci se skenerem.
+Při prvním spuštění povolte **přístup k místní síti** (Nastavení systému → Soukromí a zabezpečení → Místní síť).
 
 ## Když něco nejde
 
 | Hláška | Co s tím |
 |---|---|
-| Nelze se připojit… | Zkontrolujte IP adresu a zkuste `skener-cli caps <ip>`. |
-| HTTP 403 / 401 | Na tiskárně může být skenování přes síť vypnuté. Ve webovém rozhraní v nastavení sítě zapněte AirPrint / IPP skenování. |
-| Tiskárna ukazuje „Skenování…“, ale nic nepřijde | Otevřete protokol (⌘L) a pošlete ho v issue. |
-| Zbytečně vyřazuje stránky | Posuňte citlivost doleva. Vyřazené stránky vrátíte tlačítkem *Vrátit*. |
+| Tiskárna ukazuje „Skenování…“, ale nic nepřijde | Otevřete protokol (⌘L) a pošlete ho v issue |
+| HTTP 403 / 401 | Na tiskárně zapněte AirPrint / IPP skenování |
+| „Tiskárna nepřijímá PDF přímo“ | V Nastavení (⌘,) vyberte frontu macOS, tisk pak půjde přes systémový ovladač |
+| Zbytečně vyřazuje stránky | Posuňte citlivost doleva, vyřazené stránky vrátíte tlačítkem *Vrátit* |

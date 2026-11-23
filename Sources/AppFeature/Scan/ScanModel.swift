@@ -209,7 +209,7 @@ public final class ScanModel {
     var best: (document: Int, position: Int, sequence: Int)?
     for (documentIndex, document) in documents.enumerated() {
       for (position, id) in document.pageIDs.enumerated() {
-        if let other = pages[id]?.sequence, other<sequence, other>(best?.sequence ?? -1) {
+        if let other = pages[id]?.sequence, sequence > other, other > (best?.sequence ?? -1) {
           best = (documentIndex, position, other)
         }
       }
