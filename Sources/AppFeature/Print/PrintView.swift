@@ -31,23 +31,21 @@ struct PrintView: View {
 
   private var documentList: some View {
     VStack(alignment: .leading, spacing: 0) {
-      List(selection: $model.selectedID) {
-        Section("Soubory k tisku") {
+      Text("Soubory k tisku")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 16)
+        .padding(.top, 14)
+      ScrollView {
+        LazyVStack(spacing: 2) {
           ForEach(model.documents) { document in
-            HStack {
-              Image(systemName: "doc.richtext").foregroundStyle(.red)
-              VStack(alignment: .leading) {
-                Text(document.name).lineLimit(1)
-                Text(plural(document.pageCount, "strana", "strany", "stran")).font(.caption).foregroundStyle(.secondary)
-              }
-            }
-            .tag(document.id)
-            .contextMenu { Button("Odebrat", role: .destructive) { model.remove(document.id) } }
+            DocumentRow(document: document, isSelected: document.id == model.selected?.id)
+              .onTapGesture { model.selectedID = document.id }
+              .contextMenu { Button("Odebrat", role: .destructive) { model.remove(document.id) } }
           }
         }
+        .padding(8)
       }
-      .listStyle(.inset)
-      .scrollContentBackground(.hidden)
       DropZone(title: "Přetáhněte PDF nebo obrázky", systemImage: "arrow.down.doc", isTargeted: isDropTargeted)
         .padding(12)
         .onTapGesture { model.chooseFiles() }
@@ -89,6 +87,26 @@ struct PrintView: View {
         return true
       }
     }
+  }
+}
+
+private struct DocumentRow: View {
+  var document: PrintDocument
+  var isSelected: Bool
+
+  var body: some View {
+    HStack(spacing: 10) {
+      Image(systemName: "doc.richtext").foregroundStyle(.red)
+      VStack(alignment: .leading, spacing: 2) {
+        Text(document.name).lineLimit(1)
+        Text(plural(document.pageCount, "strana", "strany", "stran")).font(.caption).foregroundStyle(.secondary)
+      }
+      Spacer(minLength: 0)
+    }
+    .padding(.horizontal, 10)
+    .padding(.vertical, 7)
+    .background(isSelected ? Color.accentColor.opacity(0.2) : .clear, in: .rect(cornerRadius: 7))
+    .contentShape(.rect)
   }
 }
 
